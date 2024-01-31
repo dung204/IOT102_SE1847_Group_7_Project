@@ -10,7 +10,7 @@
 #pragma once
 
 int gameplayCharacter;
-int prevScore = 0;
+int gameOverScore = 0;
 int score = 0;
 bool isGameOver = false;
 
@@ -32,6 +32,7 @@ private:
   static void handleCharacterJump(LiquidCrystal lcd);
   static void handleObstacleMovement(LiquidCrystal lcd);
   static boolean handleObstacleCollapse(LiquidCrystal lcd);
+  static void handleSaveHighScore();
 
 public:
   static void handle(LiquidCrystal lcd, IRRemote remote, int *currentScreen);
@@ -42,6 +43,8 @@ void GameplayScreen::handle(LiquidCrystal lcd, IRRemote remote, int *currentScre
   if (isGameOver)
   {
     handleShowGameOver(lcd);
+    handleSaveHighScore();
+    handleRemote(lcd, remote, currentScreen);
     return;
   }
 
@@ -111,11 +114,11 @@ void GameplayScreen::handleRemote(LiquidCrystal lcd, IRRemote remote, int *curre
 
 void GameplayScreen::handleShowGameOver(LiquidCrystal lcd)
 {
-  lcd.setCursor(Utils::getCenteredPosition(10), 0);
+  lcd.setCursor(Utils::getCenteredPosition(9), 0);
   lcd.print("GAME OVER");
-  lcd.setCursor(Utils::getCenteredPosition(8 + String(prevScore).length()), 1);
+  lcd.setCursor(Utils::getCenteredPosition(7 + String(gameOverScore).length()), 1);
   lcd.print("SCORE: ");
-  lcd.print(prevScore);
+  lcd.print(gameOverScore);
 }
 
 void GameplayScreen::handleIncreaseScore()
@@ -158,9 +161,24 @@ boolean GameplayScreen::handleObstacleCollapse(LiquidCrystal lcd)
   {
     lcd.clear();
     isGameOver = true;
-    prevScore = score;
+    gameOverScore = score;
     score = 0;
     return true;
   }
   return false;
+}
+
+void GameplayScreen::handleSaveHighScore()
+{
+  int highScore = Utils::readEEPROMString(3, Utils::readEEPROM(2)) == ""
+                      ? 0
+                      : Utils::readEEPROMString(3, Utils::readEEPROM(2)).toInt();
+
+  if (gameOverScore > highScore)
+  {
+    // Address 2 is the length of the score as a string
+    // Address 3 to 3 + length - 1 are the characters of the score as a string
+    Utils::writeEEPROM(2, String(gameOverScore).length());
+    Utils::writeEEPROMString(3, String(gameOverScore));
+  }
 }

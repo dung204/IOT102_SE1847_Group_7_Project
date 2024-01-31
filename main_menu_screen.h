@@ -6,12 +6,12 @@
 
 #pragma once
 
-String menuItems[4] = {"PLAY", "CHARACTERS", "OBSTACLES", "ABOUT"};
 int selectedMenuItem = 0;
 
 class MainMenuScreen
 {
 private:
+  static const String MENU_ITEMS[5];
   static const String SCREEN_HEADER;
 
   static void handleShowLcd(LiquidCrystal lcd);
@@ -20,6 +20,8 @@ private:
 public:
   static void handle(LiquidCrystal lcd, IRRemote remote, int *currentScreen);
 };
+
+const String MainMenuScreen::MENU_ITEMS[5] = {"PLAY", "CHARACTERS", "OBSTACLES", "HIGH SCORE", "ABOUT"};
 
 const String MainMenuScreen::SCREEN_HEADER = "OBSTAJUMP GAME";
 
@@ -37,8 +39,8 @@ void MainMenuScreen::handleShowLcd(LiquidCrystal lcd)
   lcd.setCursor(0, 1);
   lcd.print("<");
 
-  lcd.setCursor(Utils::getCenteredPosition(menuItems[selectedMenuItem].length()), 1);
-  lcd.print(menuItems[selectedMenuItem]);
+  lcd.setCursor(Utils::getCenteredPosition(MENU_ITEMS[selectedMenuItem].length()), 1);
+  lcd.print(MENU_ITEMS[selectedMenuItem]);
 
   lcd.setCursor(15, 1);
   lcd.print(">");
@@ -55,13 +57,13 @@ void MainMenuScreen::handleRemote(LiquidCrystal lcd, IRRemote remote, int *curre
     selectedMenuItem--;
     if (selectedMenuItem < 0)
     {
-      selectedMenuItem = 3;
+      selectedMenuItem = 4;
     }
     break;
   case IRRemote::RIGHT:
     lcd.clear();
     selectedMenuItem++;
-    if (selectedMenuItem > 3)
+    if (selectedMenuItem > 4)
     {
       selectedMenuItem = 0;
     }
