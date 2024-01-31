@@ -6,6 +6,7 @@
 #include "about_screen.h"
 #include "gameplay_screen.h"
 #include "high_score_screen.h"
+#include "reset_screen.h"
 
 #pragma once
 
@@ -17,7 +18,8 @@ public:
   static const int CHARACTERS = 2;
   static const int OBSTACLES = 3;
   static const int HIGH_SCORE = 4;
-  static const int ABOUT = 5;
+  static const int RESET = 5;
+  static const int ABOUT = 6;
 };
 
 class ScreenHandler
@@ -62,6 +64,9 @@ void ScreenHandler::handle()
     break;
   case Screens::HIGH_SCORE:
     HighScoreScreen::handle(this->lcd, this->remote, &this->currentScreen);
+    break;
+  case Screens::RESET:
+    ResetScreen::handle(this->lcd, &this->currentScreen);
     break;
   case Screens::ABOUT:
     AboutScreen::handle(this->lcd, this->remote, &this->currentScreen);

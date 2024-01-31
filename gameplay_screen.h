@@ -163,6 +163,8 @@ boolean GameplayScreen::handleObstacleCollapse(LiquidCrystal lcd)
     isGameOver = true;
     gameOverScore = score;
     score = 0;
+    characterPosition = CHARACTER_DOWN;
+    obstaclePosition = 15;
     return true;
   }
   return false;
