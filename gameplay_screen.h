@@ -13,10 +13,13 @@ int gameplayCharacter;
 int gameOverScore = 0;
 int score = 0;
 bool isGameOver = false;
+bool isPaused = false;
 
 int obstacleCode = random(4, 8);
 int characterPosition = CHARACTER_DOWN;
 int obstaclePosition = 15;
+
+double accelerationRate = 0;
 
 unsigned long jumpTimer = millis();
 unsigned long scoreTimer = millis();
@@ -28,10 +31,12 @@ private:
   static void handleShowLcd(LiquidCrystal lcd);
   static void handleRemote(LiquidCrystal lcd, IRRemote remote, int *currentScreen);
   static void handleShowGameOver(LiquidCrystal lcd);
+  static void handleShowPaused(LiquidCrystal lcd);
   static void handleIncreaseScore();
   static void handleCharacterJump(LiquidCrystal lcd);
   static void handleObstacleMovement(LiquidCrystal lcd);
   static boolean handleObstacleCollapse(LiquidCrystal lcd);
+  static void handleUpdateAccelerationRate();
   static void handleSaveHighScore();
 
 public:
@@ -48,9 +53,17 @@ void GameplayScreen::handle(LiquidCrystal lcd, IRRemote remote, int *currentScre
     return;
   }
 
+  if (isPaused)
+  {
+    handleShowPaused(lcd);
+    handleRemote(lcd, remote, currentScreen);
+    return;
+  }
+
   gameplayCharacter = Utils::readEEPROM(1) > 3 ? 0 : Utils::readEEPROM(1);
 
   // These handlers are performed concurrently
+  handleUpdateAccelerationRate();
   handleIncreaseScore();
   handleCharacterJump(lcd);
   handleObstacleMovement(lcd);
@@ -83,6 +96,11 @@ void GameplayScreen::handleRemote(LiquidCrystal lcd, IRRemote remote, int *curre
     switch (command)
     {
     case IRRemote::UP:
+      characterPosition = CHARACTER_UP;
+      jumpTimer = millis();
+      lcd.clear();
+      break;
+
     case IRRemote::OK:
       if (isGameOver)
       {
@@ -93,18 +111,16 @@ void GameplayScreen::handleRemote(LiquidCrystal lcd, IRRemote remote, int *curre
         break;
       }
 
-      characterPosition = CHARACTER_UP;
-      jumpTimer = millis();
-      lcd.clear();
-      break;
-
     case IRRemote::RETURN:
       if (isGameOver)
       {
         lcd.clear();
         isGameOver = false;
         *currentScreen = 0;
+        break;
       }
+
+      isPaused = !isPaused;
       break;
     default:
       break;
@@ -121,9 +137,15 @@ void GameplayScreen::handleShowGameOver(LiquidCrystal lcd)
   lcd.print(gameOverScore);
 }
 
+void GameplayScreen::handleShowPaused(LiquidCrystal lcd)
+{
+  lcd.setCursor(Utils::getCenteredPosition(6), 0);
+  lcd.print("PAUSED");
+}
+
 void GameplayScreen::handleIncreaseScore()
 {
-  if ((millis() - scoreTimer) > 250)
+  if ((millis() - scoreTimer) > 250 * (1 - accelerationRate * 0.1))
   {
     score++;
     scoreTimer = millis();
@@ -132,7 +154,7 @@ void GameplayScreen::handleIncreaseScore()
 
 void GameplayScreen::handleCharacterJump(LiquidCrystal lcd)
 {
-  if ((millis() - jumpTimer) > 600 && characterPosition == CHARACTER_UP)
+  if ((millis() - jumpTimer) > 600 * (1 - accelerationRate * 0.1) && characterPosition == CHARACTER_UP)
   {
     lcd.clear();
     characterPosition = CHARACTER_DOWN;
@@ -142,7 +164,7 @@ void GameplayScreen::handleCharacterJump(LiquidCrystal lcd)
 
 void GameplayScreen::handleObstacleMovement(LiquidCrystal lcd)
 {
-  if ((millis() - obstacleTimer) > 250)
+  if ((millis() - obstacleTimer) > 250 * (1 - accelerationRate * 0.1))
   {
     lcd.clear();
     obstaclePosition--;
@@ -165,9 +187,18 @@ boolean GameplayScreen::handleObstacleCollapse(LiquidCrystal lcd)
     score = 0;
     characterPosition = CHARACTER_DOWN;
     obstaclePosition = 15;
+    accelerationRate = 0;
     return true;
   }
   return false;
+}
+
+void GameplayScreen::handleUpdateAccelerationRate()
+{
+  if (score % 100 == 0 && score != 0)
+  {
+    accelerationRate += 0.01;
+  }
 }
 
 void GameplayScreen::handleSaveHighScore()
