@@ -12,12 +12,16 @@ int selectedMenuItem = 0;
 class MainMenuScreen
 {
 private:
+  static const String SCREEN_HEADER;
+
   static void handleShowLcd(LiquidCrystal lcd);
   static void handleRemote(LiquidCrystal lcd, IRRemote remote, int *currentScreen);
 
 public:
   static void handle(LiquidCrystal lcd, IRRemote remote, int *currentScreen);
 };
+
+const String MainMenuScreen::SCREEN_HEADER = "OBSTAJUMP GAME";
 
 void MainMenuScreen::handle(LiquidCrystal lcd, IRRemote remote, int *currentScreen)
 {
@@ -27,12 +31,8 @@ void MainMenuScreen::handle(LiquidCrystal lcd, IRRemote remote, int *currentScre
 
 void MainMenuScreen::handleShowLcd(LiquidCrystal lcd)
 {
-  // ________________
-  // | RUNNING GAME |
-  // | 🞀   Play   🞂 |
-  // ----------------
-  lcd.setCursor(2, 0);
-  lcd.print("RUNNING GAME");
+  lcd.setCursor(1, 0);
+  lcd.print(SCREEN_HEADER);
 
   lcd.setCursor(0, 1);
   lcd.print("<");
